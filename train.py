@@ -7,6 +7,7 @@ import os
 import cv2
 import json
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -14,8 +15,8 @@ from tensorflow.python import keras
 from metrics import mean_iou, mean_dice
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
-from utils.datagenerator import EyeDataset, NoScleraDataset
-from keras_fc_densenet import _create_fc_dense_net
+from utils.datagenerator import OpenEDS
+from keras_fc_densenet import _create_fc_dense_net, build_FC_DenseNet10
 from tensorflow.keras.optimizers import RMSprop, SGD, Adam
 from imgaug import (
     augmenters as iaa,
@@ -32,16 +33,17 @@ if fix_cuda:
 
 
 # dataset contains pupil, iris, sclera and eye marks in VIA-2.0.5 format
-dataset_dir = "/home/choppy/TOC/datasets/alcohol/alcohol_v7.0"
+dataset_dir = "/home/choppy/TOC/datasets/openeds/ttv"
+class_map_dir = os.path.join(dataset_dir, "class_dict.csv")
 
 print("[INFO] Loading dataset")
 
 # transform those marks into a tensor with a custom generator and avg_aug
-trainG = EyeDataset(batch_size=bs, augmentation=avg_aug, dim=dim)
+trainG = OpenEDS(batch_size=bs, augmentation=avg_aug(), dim=dim)
 trainG.load_eyes(dataset_dir, "train")
 trainG.prepare()
 
-valG = EyeDataset(batch_size=bs, dim=dim)
+valG = OpenEDS(batch_size=bs, dim=dim)
 valG.load_eyes(dataset_dir, "val")
 valG.prepare()
 
@@ -77,12 +79,23 @@ densenet_params = {
 }
 
 # save config cuz "no memory" is left
-with open("alcohol_models/config.json", "w") as fp:
+with open("models/config.json", "w") as fp:
     json.dump(densenet_params, fp)
 
-densenet_params["img_input"] = Input(shape=trainG.input_shape)
-logits = _create_fc_dense_net(**densenet_params)
-model = Model(inputs=densenet_params["img_input"], outputs=logits)
+# densenet_params["img_input"] = Input(shape=trainG.input_shape)
+# new model
+model = build_FC_DenseNet10(
+    nb_classes=trainG.num_classes,
+    final_softmax=densenet_params.get("final_softmax"),
+    input_shape=densenet_params.get("img_input"),
+    dropout_rate=densenet_params.get("dropout_rate"),
+    data_format=densenet_params.get("data_format"),
+)
+
+
+# old model
+# logits = _create_fc_dense_net(**densenet_params)
+# model = Model(inputs=densenet_params["img_input"], outputs=logits)
 
 # compile model with adam optimizer
 # experimental: with rmprop optimizer
@@ -99,7 +112,7 @@ model.compile(
 
 # save checkpoints of model
 mckpt = keras.callbacks.ModelCheckpoint(
-    filepath="alcohol_models/epoch_{epoch:03d}_miou_{val_mean_iou:.4f}.h5",
+    filepath="models/epoch_{epoch:03d}_miou_{val_mean_iou:.4f}.h5",
     monitor="val_mean_iou",
     verbose=1,
     save_best_only=True,
@@ -137,7 +150,7 @@ hist = model.fit_generator(
     # callbacks=[reduce_lr, mckpt, tsboard, ],
     workers=12,
     max_queue_size=36,
-    use_multiprocessing=True,
+    use_multiprocessing=True,  # use wisely
 )
 
 # define a plot function to plot history scores
@@ -164,4 +177,4 @@ def plot_history(history, title, save_path, figsize=(10, 8), font_scale=2, linew
 
 
 # call plot function
-plot_history(hist, "Dense10 Training Loss & mIoU.", "alcohol_models/plot.png")
+plot_history(hist, "Dense10 Training Loss & mIoU.", "models/train_plot.png")
