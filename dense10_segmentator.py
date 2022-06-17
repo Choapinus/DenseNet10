@@ -85,22 +85,22 @@ class DenseSegmentator(AbstractSegmentatorClass):
             "arcface": {
                 "out_layer": "",
                 "_class": ArcFaceFeatureExtractor,
-                "modelpath": "../weights/arcface/arcface_weights.h5",
+                "modelpath": "../models/arcface/arcface_weights.h5",
             },
             "vggface": {
                 "out_layer": "conv2d_15",
                 "_class": VGGFaceFeatureExtractor,
-                "modelpath": "../weights/vggface/vgg_face_weights.h5",
+                "modelpath": "../models/vggface/vgg_face_weights.h5",
             },
             "facenet": {
                 "out_layer": "add_16",
                 "_class": FaceNetFeatureExtractor,
-                "modelpath": "../weights/facenet/facenet_weights.h5",
+                "modelpath": "../models/facenet/facenet_weights.h5",
             },
             "mobilenetv2": {
                 "out_layer": "global_average_pooling2d_1",
                 "_class": MobileNetV2FeatureExtractor,
-                "modelpath": "../weights/mobilenetv2/mobilenetv2_e101.hdf5",
+                "modelpath": "../models/mobilenetv2/mobilenetv2_e101.hdf5",
             },
         }
 
@@ -150,7 +150,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         # make segmentator + embeddings model
         model = Model(
-            name="Dense Segmentator",
+            name="Dense10 Segmentator",
             inputs=model.input,
             outputs=[model.output, embeddings],
         )
