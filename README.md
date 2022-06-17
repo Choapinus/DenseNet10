@@ -32,5 +32,5 @@ This paper proposes a new framework to detect, segment, and estimate the localiz
 - Dense10 - OpenEDS: coming soon!
 
 ## Information
-- [Juan Tapia](juan.tapia-farias@h-da.de) 
-- [Andres Valenzuela](andres.valenzuela@tocbiometrics.com)
+- @Juan Tapia - juan.tapia-farias@h-da.de
+- @Andres Valenzuela - andres.valenzuela@tocbiometrics.com
