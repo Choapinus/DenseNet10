@@ -22,10 +22,13 @@ This paper proposes a new framework to detect, segment, and estimate the localiz
 
 
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABVWFPF4ML6OFVAKCZGZBFO4YVMYQIQ)
+![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/eyes_segmented.png?token=GHSAT0AAAAAABVWFPF4C7OTXJDGFUC7VOAGYVMYVLQ)
+
+## Datasets
+- OpenEDS: coming soon!
 
 ## Models
-
-- OpenEDS: coming soon!
+- Dense10 - OpenEDS: coming soon!
 
 ## Information
 - [Juan Tapia](juan.tapia-farias@h-da.de) 
