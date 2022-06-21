@@ -28,7 +28,7 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 ## Models
 - DenseNet10: coming soon!
 
-##Cited:
+## Cited:
 A. Valenzuela, C. Arellano and J. E. Tapia, "Towards an Efficient Segmentation Algorithm for Near-Infrared Eyes Images," in IEEE Access, vol. 8, pp. 171598-171607, 2020, doi: 10.1109/ACCESS.2020.3025195.
 
 Juan. E. Tapia, E. L. Droguett, A. Valenzuela, D. P. Benalcazar, L. Causa and C. Busch, "Semantic Segmentation of Periocular Near-Infra-Red Eye Images Under Alcohol Effects," in IEEE Access, vol. 9, pp. 109732-109744, 2021, doi: 10.1109/ACCESS.2021.3101256.
