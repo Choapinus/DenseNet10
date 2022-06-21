@@ -10,6 +10,12 @@ Semantic segmentation has been widely used for several applications, including t
 
 This paper proposes a new framework to detect, segment, and estimate the localization of the eyes from a periocular Near-Infra-Red iris image under alcohol consumption. This stage will take part in the final solution to measure the fitness for duty. Fitness systems allow us to determine whether a person is physically or psychologically able to perform their tasks. Our segmentation framework is based on an object detector trained from scratch to detect both eyes from a single image. Then, two efficient networks were used for semantic segmentation; a Criss-Cross attention network and DenseNet10, with only 122,514 and 210,732 parameters, respectively. These networks can find the pupil, iris, and sclera. In the end, the binary output eye mask is used for pupil and iris diameter estimation with high precision. Five state-of-the-art algorithms were used for this purpose. A mixed proposal reached the best results. A second contribution is establishing an alcohol behavior curve to detect the alcohol presence utilizing a stream of images captured from an iris instance. Also, a manually labeled database with more than 20k images was created. Our best method obtains a mean Intersection-over-Union of 94.54% with DenseNet10 with only 210,732 parameters and an error of only 1-pixel on average.
 
+
+![figure15_paper_alcohol](https://user-images.githubusercontent.com/45126159/174738149-2bc36770-e9ec-4504-a4d2-836c947eed35.png)
+<em>Example of semi-closed challenging images. Left original images under alcohol consumption. Right: Our proposed
+DenseNet10 results.</em>
+
+
 ### Keras implementation
 
 Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eyes Images](https://ieeexplore.ieee.org/abstract/document/9200989) and complemented in [Semantic Segmentation of Periocular Near-Infra-Red Eye Images Under Alcohol Effects](https://ieeexplore.ieee.org/abstract/document/9502109).
