@@ -17,7 +17,7 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 - Database
 - Env file
 
-![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/model_weights.png?token=GHSAT0AAAAAABVWFPF4NULDH2EENONLFJB2YVMYPXA)
+![(https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/model_weights.png?token=GHSAT0AAAAAABVWFPF4NULDH2EENONLFJB2YVMYPXA)]
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABVWFPF4ML6OFVAKCZGZBFO4YVMYQIQ)
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/eyes_segmented.png?token=GHSAT0AAAAAABVWFPF4C7OTXJDGFUC7VOAGYVMYVLQ)
 
@@ -28,7 +28,7 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 ## Models
 - DenseNet10: coming soon!
 
-## Cited:
+## Citation:
 A. Valenzuela, C. Arellano and J. E. Tapia, "Towards an Efficient Segmentation Algorithm for Near-Infrared Eyes Images," in IEEE Access, vol. 8, pp. 171598-171607, 2020, doi: 10.1109/ACCESS.2020.3025195.
 
 Juan. E. Tapia, E. L. Droguett, A. Valenzuela, D. P. Benalcazar, L. Causa and C. Busch, "Semantic Segmentation of Periocular Near-Infra-Red Eye Images Under Alcohol Effects," in IEEE Access, vol. 9, pp. 109732-109744, 2021, doi: 10.1109/ACCESS.2021.3101256.
