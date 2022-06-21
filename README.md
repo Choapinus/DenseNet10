@@ -1,5 +1,4 @@
 # DenseNet10
-## UNet Segmentator based on Tiramisu DenseNet arch
 ### Keras version
 
 Created in [Towards an Efficient Segmentation Algorithm for Near-Infrared Eyes Images](https://ieeexplore.ieee.org/abstract/document/9200989) and complemented in [Semantic Segmentation of Periocular Near-Infra-Red Eye Images Under Alcohol Effects](https://ieeexplore.ieee.org/abstract/document/9502109).
