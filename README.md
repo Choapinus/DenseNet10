@@ -19,7 +19,7 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 - Database
 - Env file
 
-![(https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/model_weights.png?token=GHSAT0AAAAAABVWFPF4NULDH2EENONLFJB2YVMYPXA)]
+![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/model_weights.png?token=GHSAT0AAAAAABVWFPF4NULDH2EENONLFJB2YVMYPXA)
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABVWFPF4ML6OFVAKCZGZBFO4YVMYQIQ)
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/eyes_segmented.png?token=GHSAT0AAAAAABVWFPF4C7OTXJDGFUC7VOAGYVMYVLQ)
 
@@ -31,9 +31,28 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 - DenseNet10: coming soon!
 
 ## Citation:
-A. Valenzuela, C. Arellano and J. E. Tapia, "Towards an Efficient Segmentation Algorithm for Near-Infrared Eyes Images," in IEEE Access, vol. 8, pp. 171598-171607, 2020, doi: 10.1109/ACCESS.2020.3025195.
-
-Juan. E. Tapia, E. L. Droguett, A. Valenzuela, D. P. Benalcazar, L. Causa and C. Busch, "Semantic Segmentation of Periocular Near-Infra-Red Eye Images Under Alcohol Effects," in IEEE Access, vol. 9, pp. 109732-109744, 2021, doi: 10.1109/ACCESS.2021.3101256.
+```
+@ARTICLE{9200989,
+  author={Valenzuela, Andres and Arellano, Claudia and Tapia, Juan E.},
+  journal={IEEE Access}, 
+  title={Towards an Efficient Segmentation Algorithm for Near-Infrared Eyes Images}, 
+  year={2020},
+  volume={8},
+  number={},
+  pages={171598-171607},
+  doi={10.1109/ACCESS.2020.3025195}}
+```
+```
+@ARTICLE{9502109,
+  author={Tapia, Juan E. and Droguett, Enrique Lopez and Valenzuela, Andres and Benalcazar, Daniel P. and Causa, Leonardo and Busch, Christoph},
+  journal={IEEE Access}, 
+  title={Semantic Segmentation of Periocular Near-Infra-Red Eye Images Under Alcohol Effects}, 
+  year={2021},
+  volume={9},
+  number={},
+  pages={109732-109744},
+  doi={10.1109/ACCESS.2021.3101256}}
+```
 
 
 ## Information
