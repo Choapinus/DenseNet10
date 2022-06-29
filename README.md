@@ -39,6 +39,9 @@ conda activate fb_iris
 python train.py
 ```
 
+## How to load and eval
+- comming soon!
+
 ## Models
 - DenseNet10: coming soon!
 
