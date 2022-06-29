@@ -40,10 +40,11 @@ python train.py
 ```
 
 ## How to load and eval
-- comming soon!
+- [Evaluate](https://github.com/Choapinus/DenseNet10/blob/master/notebooks/eval_radio_error.ipynb)
+- [Load Abstract Class](https://github.com/Choapinus/DenseNet10/blob/master/notebooks/DenseSegmentatorClass.ipynb)
 
 ## Models
-- DenseNet10: coming soon!
+- [DenseNet10-OpenEDS](https://github.com/Choapinus/DenseNet10/raw/master/models/epoch_124_miou_0.9345.h5)
 
 ## Citation:
 ```
