@@ -9,22 +9,17 @@ from metrics import mean_iou, mean_dice
 from tensorflow.keras.models import load_model
 from tensorflow.python.keras.models import Model
 from scipy.ndimage.measurements import center_of_mass
-from feature_extractor.arcface import ArcFaceFeatureExtractor
-from feature_extractor.vggface import VGGFaceFeatureExtractor
-from feature_extractor.facenet import FaceNetFeatureExtractor
-from feature_extractor.mobilenetv2 import MobileNetV2FeatureExtractor
 from tensorflow.python.keras.layers import (
     GlobalAveragePooling2D,
     GlobalMaxPool2D,
     Flatten,
-    Activation,
 )
 
 from abstract_segmentator import AbstractSegmentatorClass
 
 # TODO: add more documentation
 
-logger = logging.getLogger("alcohol_dense10_20210330")
+logger = logging.getLogger("dense10_20220629")
 
 
 class DenseSegmentator(AbstractSegmentatorClass):
@@ -53,16 +48,11 @@ class DenseSegmentator(AbstractSegmentatorClass):
         self.periocular_id = config.getint("Segmentator", "PeriocularID")
         self.rtype = config.get("Segmentator", "RadiusType").lower()
         threshold = config.getfloat("Segmentator", "Threshold")
-        feature_extractor_pooling_operation = config.get(
-            "FeatureExtractor", "PoolingOperation"
-        )
-        feature_extractor_model_name = config.get("FeatureExtractor", "ModelName")
 
         kwargs.update(
             {
                 "modelpath": modelpath,
                 "threshold": threshold,
-                "pooling_operation": feature_extractor_pooling_operation,
             }
         )
 
@@ -70,51 +60,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         # radii estimators config
         self.radii_estimators = self.set_radii_estimators()
-
-        # feature extraction config
-        self.feature_extractor = self.set_feature_extractor(
-            feature_extractor_model_name, feature_extractor_pooling_operation
-        )
-
         logger.debug("DenseSegmentator model loaded")
-
-    def set_feature_extractor(
-        self, modelname="densenet", pooling_operation="max", *args, **kwargs
-    ):
-        _extractors = {
-            "arcface": {
-                "out_layer": "",
-                "_class": ArcFaceFeatureExtractor,
-                "modelpath": "../models/arcface/arcface_weights.h5",
-            },
-            "vggface": {
-                "out_layer": "conv2d_15",
-                "_class": VGGFaceFeatureExtractor,
-                "modelpath": "../models/vggface/vgg_face_weights.h5",
-            },
-            "facenet": {
-                "out_layer": "add_16",
-                "_class": FaceNetFeatureExtractor,
-                "modelpath": "../models/facenet/facenet_weights.h5",
-            },
-            "mobilenetv2": {
-                "out_layer": "global_average_pooling2d_1",
-                "_class": MobileNetV2FeatureExtractor,
-                "modelpath": "../models/mobilenetv2/mobilenetv2_e101.hdf5",
-            },
-        }
-
-        if modelname in (None, "", "densenet"):
-            return None
-        else:
-            modelpath = _extractors[modelname]["modelpath"]
-            ExtractorClass = _extractors[modelname]["_class"]
-            out_layer = _extractors[modelname]["out_layer"]
-            return ExtractorClass(
-                out_layer=out_layer,
-                modelpath=modelpath,
-                pooling_operation=pooling_operation,
-            )
 
     def set_model(self, *args, **kwargs):
         model = load_model(
@@ -126,52 +72,26 @@ class DenseSegmentator(AbstractSegmentatorClass):
             },
         )
 
-        embeddings = model.get_layer("activation_19").output  # hardcoded
-
-        if self.pooling_operation == "avg":
-            # embeddings = Activation('sigmoid', name='sigmoid_embeddings')(embeddings)
-            embeddings = GlobalAveragePooling2D()(embeddings)
-        elif self.pooling_operation == "max":
-            # embeddings = Activation('sigmoid', name='sigmoid_embeddings')(embeddings)
-            embeddings = GlobalMaxPool2D()(embeddings)
-        elif self.pooling_operation == "flatten":
-            # embeddings = Activation('sigmoid', name='sigmoid_embeddings')(embeddings)
-            embeddings = Flatten()(embeddings)
-            # experimental
-            # FlattenLayers = [56, 58, 62, 66, 69, 78, 86, 87, 93, 120, 123, 125, 126, 127, 128, 129, 130, 131]
-            # final output
-            # embeddings = np.resize(embeddings, (20, 20, 132))
-            # embeddings = embeddings[..., self.layers_flatten]
-            # embeddings = embeddings.flatten()
-        else:
-            raise NotImplementedError(
-                f"{self.pooling_operation} operation not implemented."
-            )
-
-        # make segmentator + embeddings model
+        # make segmentator
         model = Model(
             name="Dense10 Segmentator",
             inputs=model.input,
-            outputs=[model.output, embeddings],
+            outputs=[
+                model.output,
+            ],
         )
 
         return model
 
     def get_target_size(self, *args, model=None, **kwargs):
-        target_size = self.model.output_shape[0][1:-1][::-1]
+        target_size = self.model.output_shape[1:-1][::-1]
         return target_size
 
     def summary(self):
-        if self.feature_extractor == None:
-            return self.model.summary()
-        else:
-            return self.model.summary(), self.feature_extractor.summary()
+        return self.model.summary()
 
     def count_params(self):
-        if self.feature_extractor == None:
-            return self.model.count_params()
-        else:
-            return self.model.count_params() + self.feature_extractor.count_params()
+        return self.model.count_params()
 
     def _center_of_mass(
         self,
@@ -455,9 +375,8 @@ class DenseSegmentator(AbstractSegmentatorClass):
             image = np.expand_dims(image, axis=-1)
 
         image = np.expand_dims(image, axis=0)
-        pred_mask, embeddings = self.model.predict(image)
+        pred_mask = self.model.predict(image)
         pred_mask = pred_mask[0, ...]  # obtain unique element from batch
-        embeddings = embeddings[0]
         pred_shape = pred_mask.shape
 
         if original_shape != (None, None):
@@ -479,7 +398,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         pred_mask = pred_mask.astype(np.uint8)
 
-        return pred_mask, embeddings
+        return pred_mask
 
     def forward(self, image=None, verbose=False, *args, **kwargs):
         """Apply sequentially all model methods to get a final
@@ -501,13 +420,10 @@ class DenseSegmentator(AbstractSegmentatorClass):
             - "iris_y": y coordinate of the iris center
             - "iris_r_min": min radius of the iris
             - "iris_r_max": max radius of the iris
-            - "mask": all masks with the same size of the input image. Resized mask where each channel correspond to each eye segment and descripting embeddings corresponding to input image.
-            - "embeddings": a vector of embeddings corresponding to input image. It "describes" the image and can be used for classification.
+            - "mask": all masks with the same size of the input image. Resized mask where each channel correspond to each eye segment of input image.
             - "pred_shape": shape of the predicted mask.
             - "radii_type_estimator": radiuses type estimator used.
             - "original_shape": original shape of the input image.
-            - "embeddings_operation": operation used to compute embeddings.
-            - "embeddings_extractor_model": name of the embeddings extractor model.
         """
 
         r_pupil = [
@@ -521,15 +437,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
             image, tsize=self.target_size
         )
 
-        mask, embeddings = self.predict(image_processed, original_shape)
-
-        if self.feature_extractor is not None:
-            feature_extractor_target = self.feature_extractor.target_size
-            image_feature_extractor, _ = self.feature_extractor.process_image(
-                image, tsize=feature_extractor_target
-            )
-            image_feature_extractor = np.expand_dims(image_feature_extractor, axis=0)
-            embeddings = self.feature_extractor.predict(image_feature_extractor)[0]
+        mask = self.predict(image_processed, original_shape)
 
         pupil_mask = mask[..., self.pupil_id]
         iris_mask = mask[..., self.iris_id]
@@ -595,14 +503,9 @@ class DenseSegmentator(AbstractSegmentatorClass):
             "iris_r_min": int(r_iris[2]),
             "iris_r_max": int(r_iris[3]),
             "mask": mask,
-            "embeddings": list(embeddings),
             "pred_shape": list(self.target_size),
             "radii_type_estimator": self.rtype.lower(),
             "original_shape": list(original_shape),
-            "embeddings_operation": self.pooling_operation,
-            "embeddings_extractor_model": str(self.feature_extractor)
-            if self.feature_extractor
-            else "densenet",
         }
 
         return elem
@@ -651,7 +554,6 @@ class DenseSegmentator(AbstractSegmentatorClass):
             )
 
             info.pop("mask")
-            info.pop("embeddings")
 
             info.update(
                 {

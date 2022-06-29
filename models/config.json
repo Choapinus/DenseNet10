@@ -1,0 +1,25 @@
+{
+    "img_input": [
+        320,
+        240,
+        3
+    ],
+    "nb_classes": 4,
+    "nb_dense_block": 4,
+    "growth_rate": 6,
+    "nb_layers_per_block": 3,
+    "init_conv_filters": 48,
+    "transition_pooling": "max",
+    "initial_kernel_size": [
+        3,
+        3
+    ],
+    "upsampling_type": "deconv",
+    "activation": "relu",
+    "bn_momentum": 0.9,
+    "weight_decay": 0.0001,
+    "dropout_rate": 0.15,
+    "final_softmax": true,
+    "name_scope": "DenseNetFCN",
+    "data_format": "channels_last"
+}
