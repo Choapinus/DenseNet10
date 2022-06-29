@@ -33,7 +33,8 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 - OpenEDS is a data set of eye images captured using a virtual-reality HMD with two synchronized eye-facing cameras at a frame rate of 200 Hz under controlled illumination.This dataset is composed of: Semantic segmentation data set collected with 152 participants of 12,759 images with annotations at a resolution of 400×640. Generative data set collected with 152 participants of 252,690 images at a resolution 400×600. Sequence data set collected with 152 participants of 91,200 images at a resolution of 400×640, with duration of 1.5 seconds for each participant, sampled at 200 Hz. Left and right paired human eye corneal topography in the form of point cloud collected for 143 participants. Available from the source: https://www.v7labs.com/open-datasets/facebook-openeds
 
 ## How to make env and train
-```conda create --file env.yml
+```
+conda create --file env.yml
 conda activate fb_iris
 python train.py
 ```
