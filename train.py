@@ -1,5 +1,5 @@
 bs = 4
-dim = (240, 320)
+dim = (320, 240)
 # dim = (224, 224)
 fix_cuda = True
 
@@ -27,12 +27,12 @@ from keras.backend.tensorflow_backend import set_session
 
 if fix_cuda:
     config = tf.ConfigProto()
-    # dynamically grow GPU memory
+    # dynamically grow GPU memory because unexpected error with gtx 1660 Ti max-Q
     config.gpu_options.allow_growth = True
     set_session(tf.Session(config=config))
 
 
-# dataset contains pupil, iris, sclera and eye marks in VIA-2.0.5 format
+# dataset contains pupil, iris, sclera and eye marks
 dataset_dir = "/home/choppy/TOC/datasets/openeds/ttv"
 class_map_dir = os.path.join(dataset_dir, "class_dict.csv")
 
@@ -72,7 +72,7 @@ densenet_params = {
     "activation": "relu",
     "bn_momentum": 0.9,
     "weight_decay": 1e-4,
-    "dropout_rate": 0.08,
+    "dropout_rate": 0.15,
     "final_softmax": True,
     "name_scope": "DenseNetFCN",
     "data_format": "channels_last",
@@ -82,7 +82,6 @@ densenet_params = {
 with open("models/config.json", "w") as fp:
     json.dump(densenet_params, fp)
 
-# densenet_params["img_input"] = Input(shape=trainG.input_shape)
 # new model
 model = build_FC_DenseNet10(
     nb_classes=trainG.num_classes,
@@ -94,6 +93,7 @@ model = build_FC_DenseNet10(
 
 
 # old model
+# densenet_params["img_input"] = Input(shape=trainG.input_shape)
 # logits = _create_fc_dense_net(**densenet_params)
 # model = Model(inputs=densenet_params["img_input"], outputs=logits)
 
