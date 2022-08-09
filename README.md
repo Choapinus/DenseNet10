@@ -45,7 +45,7 @@ python train.py
 - [Evaluate](https://github.com/Choapinus/DenseNet10/blob/master/notebooks/eval_radio_error.ipynb)
 - [Load Abstract Class](https://github.com/Choapinus/DenseNet10/blob/master/notebooks/DenseSegmentatorClass.ipynb)
 
-## Models
+## Pretrained Models
 - [DenseNet10-OpenEDS](https://github.com/Choapinus/DenseNet10/raw/master/models/epoch_124_miou_0.9345.h5)
 
 ## How to read coords
