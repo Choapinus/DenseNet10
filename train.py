@@ -55,12 +55,6 @@ os.makedirs("models", exist_ok=True)
 densenet_params = {
     "img_input": trainG.input_shape,
     "nb_classes": trainG.num_classes,
-    # experimental
-    # 'nb_dense_block': 1,
-    # 'growth_rate': 4,
-    # 'nb_layers_per_block': 4,
-    # 'init_conv_filters': 30,
-    # 'transition_pooling': 'RE',
     # avg params of dense10
     "nb_dense_block": 4,
     "growth_rate": 6,
@@ -90,12 +84,6 @@ model = build_FC_DenseNet10(
     dropout_rate=densenet_params.get("dropout_rate"),
     data_format=densenet_params.get("data_format"),
 )
-
-
-# old model
-# densenet_params["img_input"] = Input(shape=trainG.input_shape)
-# logits = _create_fc_dense_net(**densenet_params)
-# model = Model(inputs=densenet_params["img_input"], outputs=logits)
 
 # compile model with adam optimizer
 # experimental: with rmprop optimizer
