@@ -20,7 +20,7 @@ DenseNet10 results.</em>
 
 Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eyes Images](https://ieeexplore.ieee.org/abstract/document/9200989) and complemented in [Semantic Segmentation of Periocular Near-Infra-Red Eye Images Under Alcohol Effects](https://ieeexplore.ieee.org/abstract/document/9502109).
 
-- Train file
+- Train file # input shape must be equal to (320 x 240 x 3)
 - Augmentations
 - Database
 - Env file
@@ -47,6 +47,12 @@ python train.py
 
 ## Models
 - [DenseNet10-OpenEDS](https://github.com/Choapinus/DenseNet10/raw/master/models/epoch_124_miou_0.9345.h5)
+
+## How to read coords
+- Pupil and iris coords are setted in a ellipse [x_init, y_init, r_min, r_max] where the x and y are the center of the pupil/iris and the min-max radii of the ellipse.
+
+## How to identify masks
+- In the segmentation head, the first channel correspond to background, the second channel correspond to sclera, the third correspond to iris and the last correspond to pupil mask. An example can be found in the [generator file](https://github.com/Choapinus/DenseNet10/blob/dcd9fb5e25a1638f576b7d60efeb3a2fedae0269/utils/datagenerator.py#L213).
 
 ## Citation:
 ```
