@@ -32,7 +32,9 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 
 - Before the segmentation stage, we can obtain the radii of pupil and iris with the two actual algorythms included in the project (center of mass and MSE2). This methods gives pupil and iris coords as an ellipse [x_init, y_init, r_min, r_max] where x and y are the center of the pupil/iris and the other coords are the min-max radii of the ellipse. This information can be obtained running the "forward" method of the DenseSegmentator class disposed in [dense10_segmentator.py](https://github.com/Choapinus/DenseNet10/blob/master/dense10_segmentator.py). 
 
-<img class="center" src="https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABSXZOPT3NGWCPA5YVLIODU6YY3NYGA">
+<center>
+<img src="https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABSXZOPT3NGWCPA5YVLIODU6YY3NYGA">
+</center>
 
 ## Datasets
 - OpenEDS is a data set of eye images captured using a virtual-reality HMD with two synchronized eye-facing cameras at a frame rate of 200 Hz under controlled illumination.This dataset is composed of: Semantic segmentation data set collected with 152 participants of 12,759 images with annotations at a resolution of 400×640. Generative data set collected with 152 participants of 252,690 images at a resolution 400×600. Sequence data set collected with 152 participants of 91,200 images at a resolution of 400×640, with duration of 1.5 seconds for each participant, sampled at 200 Hz. Left and right paired human eye corneal topography in the form of point cloud collected for 143 participants. 
