@@ -25,8 +25,13 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 - Database
 - Env file
 
-### Describir obtencion de radios DESPUES de la segmentacion como un paso aparte
-![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/model_weights.png?token=GHSAT0AAAAAABVWFPF4NULDH2EENONLFJB2YVMYPXA)
+### 1. Segmentation stage
+-  This process is performed pixel by pixel, assigning a label to each pixel of the input image. By this way, we can separate each region of interest of the eye semantically, obtaining the iris, pupil and sclera in different channels of the output tensor. In the method "predict" from the DenseSegmentator class in [dense10_segmentator.py](https://github.com/Choapinus/DenseNet10/blob/master/dense10_segmentator.py) file we can get this feature as is.
+
+### 2. Pupil and Iris radii estimation stage
+
+- Before the segmentation stage, we can obtain the radii of pupil and iris with the two actual algorythms included in the project (center of mass and MSE2). This methods gives pupil and iris coords as an ellipse [x_init, y_init, r_min, r_max] where x and y are the center of the pupil/iris and the other coords are the min-max radii of the ellipse. This information can be obtained running the "forward" method of the DenseSegmentator class disposed in [dense10_segmentator.py](https://github.com/Choapinus/DenseNet10/blob/master/dense10_segmentator.py).
+
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABVWFPF4ML6OFVAKCZGZBFO4YVMYQIQ)
 
 ## Datasets
@@ -49,7 +54,7 @@ python train.py
 - [DenseNet10-OpenEDS](https://github.com/Choapinus/DenseNet10/raw/master/models/epoch_124_miou_0.9345.h5)
 
 ## How to read coords
-- Pupil and iris coords are setted in a ellipse [x_init, y_init, r_min, r_max] where the x and y are the center of the pupil/iris and the min-max radii of the ellipse.
+- Pupil and iris coords are setted in a ellipse [x_init, y_init, r_min, r_max] where the x and y are the center of the pupil/iris and the rest corresponds to min-max radii of the ellipse.
 
 ## How to identify masks
 - In the segmentation head, the first channel correspond to background, the second channel correspond to sclera, the third correspond to iris and the last correspond to pupil mask. An example can be found in the [generator file](https://github.com/Choapinus/DenseNet10/blob/dcd9fb5e25a1638f576b7d60efeb3a2fedae0269/utils/datagenerator.py#L213).
