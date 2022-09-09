@@ -28,7 +28,7 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 
 ### 2. Pupil and Iris radii estimation stage
 
-- Before the segmentation stage, we can obtain the radii of pupil and iris with the two actual algorythms included in the project (center of mass and MSE2). This methods gives pupil and iris coords as an ellipse [x_init, y_init, r_min, r_max] where x and y are the center of the pupil/iris and the other coords are the min-max radii of the ellipse. This information can be obtained running the "forward" method of the DenseSegmentator class disposed in [dense10_segmentator.py](https://github.com/Choapinus/DenseNet10/blob/master/dense10_segmentator.py). 
+- Before the segmentation stage, we can obtain the radii of pupil and iris with the two actual algorythms included in the class (center of mass and MSE2). This methods process the previous segmentations masks and gives pupil and iris coords as an ellipse [x_init, y_init, r_min, r_max] where x and y are the center of the pupil/iris and the other coords are the min-max radii of the ellipse. This information can be obtained running the "forward" method of the DenseSegmentator class disposed in [dense10_segmentator.py](https://github.com/Choapinus/DenseNet10/blob/master/dense10_segmentator.py). 
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABSXZOPSS6R537XYSMLFC4ZKYY3QW5Q">
