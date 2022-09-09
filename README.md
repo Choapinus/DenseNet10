@@ -25,6 +25,7 @@ Developed for [Towards an Efficient Segmentation Algorithm for Near-Infrared Eye
 - Database
 - Env file
 
+### Describir obtencion de radios DESPUES de la segmentacion como un paso aparte
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/model_weights.png?token=GHSAT0AAAAAABVWFPF4NULDH2EENONLFJB2YVMYPXA)
 ![](https://raw.githubusercontent.com/Choapinus/DenseNet10/master/static/radii_estimation.png?token=GHSAT0AAAAAABVWFPF4ML6OFVAKCZGZBFO4YVMYQIQ)
 
