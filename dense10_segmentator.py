@@ -123,12 +123,43 @@ class DenseSegmentator(AbstractSegmentatorClass):
             xp, yp = np.where(mask == 1)
             # largest distance between (xp, yp) and center is the radius
             rx, ry = np.abs((xp - x)).max(), np.abs((yp - y)).max()
-            return np.array([center[0], center[1], min(rx, ry), max(rx, ry)])
+            # return np.array(
+            #   [center[0], center[1], min(rx, ry), max(rx, ry)]
+            # ) # this line return an ellipse. Required by DB
+            return np.array(
+                [center[0], center[1], min(rx, ry), min(rx, ry)]
+            )  # this line return a circle
+
         except ValueError as er:
             # log error
             return np.zeros(4)
 
-    def MSE2(
+    def imfill_holes(self, bw):
+        # Copy the thresholded image.
+        im_floodfill = bw.copy()
+        # Mask used to flood filling
+        h, w = bw.shape[:2]
+        mask = np.zeros((h + 2, w + 2), np.uint8)
+        # Floodfill from point (0, 0)
+        cv2.floodFill(im_floodfill, mask, (0, 0), 255)
+        # Invert floodfilled image
+        im_floodfill_inv = cv2.bitwise_not(im_floodfill)
+        # Combine the two images to get the foreground.
+        return bw | im_floodfill_inv
+
+    def circfit(self, x, y):
+        # By: Izhak bucher 25/oct /1991,
+        x = np.reshape(x.flatten(), (-1, 1))
+        y = np.reshape(y.flatten(), (-1, 1))
+        A = np.concatenate((x, y, np.ones(x.shape)), 1)
+        B = -(x ** 2) - y ** 2
+        a, _, _, _ = np.linalg.lstsq(A, B)
+        xc = float(-0.5 * a[0])
+        yc = float(-0.5 * a[1])
+        R = float(np.sqrt(0.25 * (a[0] ** 2 + a[1] ** 2) - a[2]))
+        return xc, yc, R
+
+    def LMS2(
         self,
         *args,
         mask=None,
@@ -149,37 +180,12 @@ class DenseSegmentator(AbstractSegmentatorClass):
         ),
         **kwargs,
     ):
-        def imfill_holes(bw):
-            # Copy the thresholded image.
-            im_floodfill = bw.copy()
-            # Mask used to flood filling
-            h, w = bw.shape[:2]
-            mask = np.zeros((h + 2, w + 2), np.uint8)
-            # Floodfill from point (0, 0)
-            cv2.floodFill(im_floodfill, mask, (0, 0), 255)
-            # Invert floodfilled image
-            im_floodfill_inv = cv2.bitwise_not(im_floodfill)
-            # Combine the two images to get the foreground.
-            return bw | im_floodfill_inv
-
         def im_contour(bw, kernel):
             eroded = cv2.erode(bw, kernel, iterations=1)
             return bw - eroded
 
-        def circfit(x, y):
-            # By: Izhak bucher 25/oct /1991,
-            x = np.reshape(x.flatten(), (-1, 1))
-            y = np.reshape(y.flatten(), (-1, 1))
-            A = np.concatenate((x, y, np.ones(x.shape)), 1)
-            B = -(x ** 2) - y ** 2
-            a, _, _, _ = np.linalg.lstsq(A, B)
-            xc = float(-0.5 * a[0])
-            yc = float(-0.5 * a[1])
-            R = float(np.sqrt(0.25 * (a[0] ** 2 + a[1] ** 2) - a[2]))
-            return xc, yc, R
-
         # Isolate iris and pupil
-        iris = imfill_holes(mask)
+        iris = self.imfill_holes(mask)
         pupil = cv2.bitwise_xor(mask, iris)
 
         # Test if pupil was found
@@ -215,7 +221,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
             # Obtain the circle that best adapts the valid iris contour
             y, x = np.where(iris > 0)
-            xi, yi, rx = circfit(x, y)
+            xi, yi, rx = self.circfit(x, y)
 
             # Iris coordinates
             iris_xyr = np.array([xi, yi, rx, ry])  # daniel
@@ -257,7 +263,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
                 # Obtain the circle that best adapts the valid pupil contour
                 y, x = np.where(pupil > 0)
-                xp, yp, rp = circfit(x, y)
+                xp, yp, rp = self.circfit(self, x, y)
 
                 # Pupil coordinates
                 pupil_xyr = np.array([xp, yp, rp, rp])  # daniel
@@ -265,7 +271,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
                 # Obtain the circle that best adapts the valid iris contour
                 y, x = np.where(iris > 0)
-                xi, yi, rx = circfit(x, y)
+                xi, yi, rx = self.circfit(self, x, y)
 
                 # Iris coordinates
                 iris_xyr = np.array([xi, yi, rx, ry])  # daniel
@@ -278,12 +284,125 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         return pupil_xyr, iris_xyr  # daniel
 
+    def LMS3(self, mask=None, *args, **kwargs):
+
+        # add internal functions of lms3
+        def kernel7():
+            kernel = np.ones([7, 7], dtype=np.uint8)
+
+            for i in (0, 1, 5, 6):
+                for j in (0, 1, 5, 6):
+                    kernel[j, i] = 0
+
+            for i in (1, 5):
+                for j in (1, 5):
+                    kernel[j, i] = 1
+
+            return kernel
+
+        def get_biggest(mask):
+            # Find area of connected components
+            nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(
+                mask, connectivity=8
+            )
+            sizes = stats[1:, -1]
+            if len(sizes) > 0:
+                id_max = np.argmax(sizes) + 1
+            else:
+                id_max = 0
+
+            # Choose the region with the biggest area
+            if len(sizes) > 0:
+                mask = output == id_max
+
+            return mask.astype("uint8") * 255
+
+        def find_horizontal_lines(mask, kernel):
+            dy = np.array([[-1], [0], [1]])
+            h_lines = np.abs(cv2.filter2D(mask, cv2.CV_16S, dy)).astype(np.uint8)
+            h_lines = cv2.GaussianBlur(h_lines, (5, 5), 2) > 100
+            h_lines = cv2.dilate(h_lines.astype(np.uint8), kernel)
+            return h_lines
+
+        def im_contour(bw, kernel):
+            eroded = cv2.erode(bw, kernel, iterations=1)
+            return bw - eroded
+
+        # define kernels to use
+        se1 = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
+        se2 = kernel7()
+
+        # follow daniel flux
+        iris = mask[..., self.iris_id]
+        pupil = mask[..., self.pupil_id]
+
+        iris = iris.astype(np.uint8)
+        pupil = pupil.astype(np.uint8)
+
+        # Get biggest area
+        iris = get_biggest(iris)
+        pupil = get_biggest(pupil)
+
+        # Clean iris
+        iris = self.imfill_holes(iris)
+        iris_mask = iris
+        iris_mask[pupil > 0] = 0
+
+        # Morphological Open
+        iris = cv2.morphologyEx(iris, cv2.MORPH_OPEN, se1)
+        pupil = cv2.morphologyEx(pupil, cv2.MORPH_OPEN, se1)
+
+        # Morphological Close
+        iris = cv2.morphologyEx(iris, cv2.MORPH_CLOSE, se1)
+        pupil = cv2.morphologyEx(pupil, cv2.MORPH_CLOSE, se1)
+
+        # Iris radius on the y axis
+        y, _ = np.where(iris)
+        ri_y = (max(y) - min(y)) / 2
+
+        # Pupil radius on the y axis
+        y, _ = np.where(pupil)
+        try:
+            rp_y = (max(y) - min(y)) / 2
+        except ValueError as ve:
+            logger.error("An error ocurred getting minmax(y) inside LMS3")
+            rp_y = 0
+
+        # Find eye leads
+        parp1 = find_horizontal_lines(pupil, se1)
+        parp2 = find_horizontal_lines(iris, se1)
+
+        # Find Pupil contour
+        pupil2 = im_contour(pupil, se1)
+        pupil2[parp1 > 0] = 0
+
+        # Find Iris contour
+        iris2 = im_contour(iris, se1)
+        iris2[parp2 > 0] = 0
+        iris2[cv2.dilate(pupil, se2) > 0] = 0
+
+        # Find pupil circle
+        y, x = np.where(pupil2 > 0)
+        xp, yp, rp_x = self.circfit(x, y)
+
+        # Find iris circle
+        y, x = np.where(iris2 > 0)
+        xi, yi, ri_x = self.circfit(x, y)
+
+        # Outputs
+        pupil_xyr = np.array([xp, yp, rp_x, rp_y]).astype(np.int32)
+        iris_xyr = np.array([xi, yi, ri_x, ri_y]).astype(np.int32)
+
+        # return pupil_xyr, iris_xyr, iris_mask # daniel
+        return pupil_xyr, iris_xyr
+
     # how to add more estimators?
     # example below
     def set_radii_estimators(self, *args, **kwargs):
         return {
             "center_of_mass": self._center_of_mass,
-            "mse2": self.MSE2,
+            "lms2": self.LMS2,
+            "lms3": self.LMS3,
             # "another_key": self.another_estimator
         }
 
@@ -293,7 +412,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
             return np.zeros(4)
         else:
             _radii_function = self.radii_estimators[rtype.lower()]
-            return _radii_function(*args, mask=mask, **kwargs)
+            return _radii_function(mask=mask, *args, **kwargs)
 
     def distance_error(self, info, label, dist_type="", *args, **kwargs):
         if dist_type.lower() == "pupil":
@@ -476,7 +595,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
                     logger.warn(ex)
 
         # mean squared error v2_DB
-        elif self.rtype.lower() == "mse2":
+        elif self.rtype.lower() == "lms2":
             r_pupil, _ = self.get_radio(
                 mask=pupil_mask,
                 rtype=self.rtype,
@@ -492,6 +611,26 @@ class DenseSegmentator(AbstractSegmentatorClass):
             # fix daniel radiis
             r_pupil[0], r_pupil[1] = r_pupil[1], r_pupil[0]
             r_iris[0], r_iris[1] = r_iris[1], r_iris[0]
+
+        # hardcoded because this have a different behaviour
+        # mean squared error v3_DB
+        elif self.rtype.lower() == "lms3":
+            pupil_xyr, iris_xyr = self.lms3(mask)
+            # fix daniel radiis
+            r_pupil[0], r_pupil[1] = pupil_xyr[1], pupil_xyr[0]
+            r_iris[0], r_iris[1] = iris_xyr[1], iris_xyr[0]
+
+            # assign radii to remaning slots in r_pupil and r_iris
+            # in lms3, DB said the function will return a circle, not an ellipse
+            r_pupil[2] = pupil_xyr[2]
+            r_pupil[3] = pupil_xyr[3]
+
+            r_iris[2] = iris_xyr[2]
+            r_iris[3] = iris_xyr[3]
+
+            if verbose:
+                logger.warn(f"pupil info: {r_pupil}")
+                logger.warn(f"iris info: {r_iris}")
 
         elem = {
             "pupil_x": int(r_pupil[0]),
