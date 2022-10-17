@@ -100,6 +100,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
         min_t=0.0,
         max_t=1.0,
         kernel=np.ones((13, 13), dtype=np.uint8),
+        return_circle=True,
         **kwargs,
     ):
         # https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_morphological_ops/py_morphological_ops.html
@@ -123,12 +124,11 @@ class DenseSegmentator(AbstractSegmentatorClass):
             xp, yp = np.where(mask == 1)
             # largest distance between (xp, yp) and center is the radius
             rx, ry = np.abs((xp - x)).max(), np.abs((yp - y)).max()
-            # return np.array(
-            #   [center[0], center[1], min(rx, ry), max(rx, ry)]
-            # ) # this line return an ellipse. Required by DB
-            return np.array(
-                [center[0], center[1], min(rx, ry), min(rx, ry)]
-            )  # this line return a circle
+
+            if return_circle:  # this will return a circle with both min radii detected
+                return np.array([center[0], center[1], min(rx, ry), min(rx, ry)])
+            else:  # this will return an ellipse with min and max radii detected
+                return np.array([center[0], center[1], min(rx, ry), max(rx, ry)])
 
         except ValueError as er:
             # log error
