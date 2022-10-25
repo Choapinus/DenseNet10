@@ -1,12 +1,4 @@
-# done * integrar ms3 a dense10
-# done * cambiar nombres de MSE por LMS (least mean squares)
-# done * estandarizar salida de centro de masa para que sea similar a las funciones de daniel cosa de que sea mas facil integrar la funcion de normalizacion de iris
-# done * agregar flag para centro de masa para que retorne un circulo o una elipse
-
-# done * portar dense10 a tf2
-
 * retrain / finetune densenet with tf2 environment
-
 
 # hacer prueba chica y constatar avances para poder proseguir
 # revisar mascaras generadas por datagenerator

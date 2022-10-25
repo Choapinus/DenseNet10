@@ -19,6 +19,7 @@ from tensorflow.python.keras.layers import (
 from abstract_segmentator import AbstractSegmentatorClass
 
 # TODO: add more documentation
+# TODO: update logger
 
 logger = logging.getLogger("dense10_20220629")
 
@@ -709,7 +710,6 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         # after getting radii of pupil and iris, we can
         # modularize iris to get iris code from it
-        # TODO: call functions here
         iris_rubsheet = self.get_rubbersheet(image, r_pupil, r_iris)
 
         elem = {
