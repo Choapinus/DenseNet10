@@ -41,7 +41,7 @@ Dataset available from the source: https://www.v7labs.com/open-datasets/facebook
 
 ## How to make env and train
 ```
-conda create --file env.yml
+conda create --name fb_iris --file env.yml
 conda activate fb_iris
 python train.py
 ```
