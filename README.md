@@ -1,4 +1,4 @@
-# DenseNet10 TF1.14
+# DenseNet10 Tensorflow 2.10
 
 Andres Valenzuela and Juan Tapia
 
@@ -59,6 +59,10 @@ python train.py
 ## How to identify masks
 - In the segmentation head, the first channel correspond to background, the second channel correspond to sclera, the third correspond to iris and the last correspond to pupil mask. An example can be found in the [generator file](https://github.com/Choapinus/DenseNet10/blob/dcd9fb5e25a1638f576b7d60efeb3a2fedae0269/utils/datagenerator.py#L213).
 
+# --- NEW!! ---
+- Tensorflow 2.x support added. Env file updated
+- Iris image modularization added as a new functionality inside "foward" flux, thanks DB!
+
 ## Citation:
 ```
 @ARTICLE{9200989,
@@ -93,6 +97,4 @@ python train.py
 The dataset, the implementation, or trained models used is restricted to research purposes. Using the dataset or the implementation/trained models for product development or comercial product is not allowed. This project is licensed under the terms of the Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license.
 
 ## TODO
-- Port to Tensorflow 2.x
-- Add iris image normalization module
-- Add iris template generation module
+- Add iris template generation module using ICA filters
