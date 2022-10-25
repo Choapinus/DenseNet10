@@ -98,3 +98,4 @@ The dataset, the implementation, or trained models used is restricted to researc
 
 ## TODO
 - Add iris template generation module using ICA filters
+- Add pytorch support
