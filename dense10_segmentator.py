@@ -5,6 +5,7 @@ import numpy as np
 import configparser
 from tqdm import tqdm
 from os.path import abspath
+from scipy.io import loadmat
 from metrics import mean_iou, mean_dice
 from tensorflow.keras.models import load_model
 from tensorflow.python.keras.models import Model
@@ -49,6 +50,20 @@ class DenseSegmentator(AbstractSegmentatorClass):
         self.rtype = config.get("Segmentator", "RadiusType").lower()
         threshold = config.getfloat("Segmentator", "Threshold")
 
+        # iris modularization config
+        self.max_shift = config.getint("IrisEncode", "MaxShift")
+        self.iris_encode_type = config.get("IrisEncode", "EncodeType").lower()
+        self.iris_mod_type = config.get("IrisEncode", "modType").lower()
+        self.icapath = config.get("IrisEncode", "ICAPath")
+        self.rubbersheet_height = config.getint("IrisEncode", "RubbersheetHeight")
+        self.rubbersheet_width = config.getint("IrisEncode", "RubbersheetWidth")
+
+        # additional data for iris mod
+        self.radii = np.arange(0, 1, 1 / self.rubbersheet_height)
+        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / self.rubbersheet_width)
+        self.cos_angles = np.cos(self.angles)
+        self.sin_angles = np.sin(self.angles)
+
         kwargs.update(
             {
                 "modelpath": modelpath,
@@ -60,6 +75,11 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         # radii estimators config
         self.radii_estimators = self.set_radii_estimators()
+
+        # additional data config
+        self.icamat = None  # TODO: parametrize this variable
+
+        # logger config
         logger.debug("DenseSegmentator model loaded")
 
     def set_model(self, *args, **kwargs):
@@ -80,6 +100,13 @@ class DenseSegmentator(AbstractSegmentatorClass):
                 model.output,
             ],
         )
+
+        # load iris encode type
+        if self.iris_encode_type == "ica":
+            self.icamat = loadmat(abspath(self.icapath))["ICAtextureFilters"]
+        else:
+            logger.warning("No iris encode type selected")
+            self.icamat = None
 
         return model
 
@@ -473,6 +500,51 @@ class DenseSegmentator(AbstractSegmentatorClass):
                 "max_radio_diff": max_radio_diff,
             }
 
+    # iris modularization function for iris recognition
+    def get_rubbersheet(self, image, pupil_xyr, iris_xyr):
+        # Angle value
+        rs = np.zeros((self.rubbersheet_height, self.rubbersheet_width, 3), np.uint8)
+
+        if self.iris_mod_type == "height":
+            # decode centers and radii
+            cx, cy, pupil_r, _ = pupil_xyr
+            _, _, iris_r, _ = iris_xyr
+
+            for i in range(self.rubbersheet_height):
+                rad = i / self.rubbersheet_height
+
+                x_lowers = cx + pupil_r * self.cos_angles
+                y_lowers = cy + pupil_r * self.sin_angles
+                x_uppers = cx + iris_r * self.cos_angles
+                y_uppers = cy + iris_r * self.sin_angles
+
+                # Fill in the rubbersheet
+                Xc = (1 - rad) * x_lowers + rad * x_uppers
+                Yc = (1 - rad) * y_lowers + rad * y_uppers
+
+                rs[i, ...] = image[Xc.astype(int), Yc.astype(int)]
+
+        else:
+            # decode centers and radii
+            yp, xp, rp, _ = pupil_xyr
+            yi, xi, ri, _ = iris_xyr
+
+            for i in range(self.rubbersheet_width):
+                rad = i / self.rubbersheet_width
+
+                x_lowers = xp + rp * self.cos_angles[i]
+                y_lowers = yp + rp * self.sin_angles[i]
+                x_uppers = xi + ri * self.cos_angles[i]
+                y_uppers = yi + ri * self.sin_angles[i]
+
+                # fill in the rubbersheet
+                Xc = (1 - self.radii) * x_lowers + self.radii * x_uppers
+                Yc = (1 - self.radii) * y_lowers + self.radii * y_uppers
+
+                rs[:, i, :] = image[Yc.astype(int), Xc.astype(int)]
+
+        return rs
+
     def predict(self, image, original_shape=(None, None)):
         """Infer the mask of the input image. The image to be
         masked must first be processed using the process_image()
@@ -540,6 +612,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
             - "iris_r_min": min radius of the iris
             - "iris_r_max": max radius of the iris
             - "mask": all masks with the same size of the input image. Resized mask where each channel correspond to each eye segment of input image.
+            - "iris_rubbersheet": modularized iris as rgb image with same type as input image
             - "pred_shape": shape of the predicted mask.
             - "radii_type_estimator": radiuses type estimator used.
             - "original_shape": original shape of the input image.
@@ -634,6 +707,11 @@ class DenseSegmentator(AbstractSegmentatorClass):
             except ValueError as ve:
                 pass
 
+        # after getting radii of pupil and iris, we can
+        # modularize iris to get iris code from it
+        # TODO: call functions here
+        iris_rubsheet = self.get_rubbersheet(image, r_pupil, r_iris)
+
         elem = {
             "pupil_x": int(r_pupil[0]),
             "pupil_y": int(r_pupil[1]),
@@ -644,6 +722,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
             "iris_r_min": int(r_iris[2]),
             "iris_r_max": int(r_iris[3]),
             "mask": mask,
+            "iris_rubbersheet": iris_rubsheet,
             "pred_shape": list(self.target_size),
             "radii_type_estimator": self.rtype.lower(),
             "original_shape": list(original_shape),

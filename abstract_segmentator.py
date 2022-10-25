@@ -51,6 +51,14 @@ class AbstractSegmentatorClass(metaclass=abc.ABCMeta):
     def predict(self, *args, **kwargs):
         raise NotImplementedError("predict method must be implemented")
 
+    @abc.abstractclassmethod
+    def get_rubbersheet(self, *args, **kwargs):
+        raise NotImplementedError("get_rubbersheet method must be implemented")
+    
+    @abc.abstractclassmethod
+    def get_radio(self, *args, **kwargs):
+        raise NotImplementedError("get_radio method must be implemented")
+
     @abc.abstractmethod
     def forward(self, *args, **kwargs):
         raise NotImplementedError("forward method must be implemented")
