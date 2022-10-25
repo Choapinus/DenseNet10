@@ -19,6 +19,8 @@ from tensorflow.keras.activations import relu
 from tensorflow.keras import regularizers
 from tensorflow.keras.regularizers import l2
 
+from tensorflow.compat.v1 import logging
+
 
 def _channel_dim(data_format):
     return 1 if data_format == "channels_first" else -1
@@ -307,7 +309,7 @@ def _create_fc_dense_net(
             bottleneck_nb_layers = nb_layers_per_block
             nb_layers = [nb_layers_per_block] * (2 * nb_dense_block + 1)
 
-        tf.logging.info("Layers in each dense block: %s" % nb_layers)
+        logging.info("Layers in each dense block: %s" % nb_layers)
 
         # make sure we can concatenate the skip connections with the upsampled
         # images on the upsampling path
@@ -382,7 +384,7 @@ def _create_fc_dense_net(
             block_prefix="Bottleneck_DenseBlock_%i" % nb_dense_block,
         )
 
-        tf.logging.info("Number of skip connections: %d" % len(skip_list))
+        logging.info("Number of skip connections: %d" % len(skip_list))
 
         # reverse the list of skip connections
         skip_list = skip_list[::-1]

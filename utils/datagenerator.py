@@ -9,8 +9,8 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 from .utils import load_image
-from imutils.paths import list_images
 from tensorflow.keras.utils import Sequence
+from imutils.paths import list_images, list_files
 
 
 class Dataset(Sequence):
@@ -318,7 +318,10 @@ class EyeDataset(Dataset):
                     elif p["name"] in [
                         "circle",
                     ]:
-                        rr, cc = skimage.draw.circle(p["cy"], p["cx"], p["r"])
+                        # rr, cc = skimage.draw.circle(p["cy"], p["cx"], p["r"])
+                        rr, cc = skimage.draw.disk(
+                            (p["cy"], p["cx"]), p["r"]
+                        )  # update for version 0.19.3
 
                     mask[rr, cc, i] = True
 
@@ -513,7 +516,9 @@ class OpenEDS(Dataset):
         # ]
 
         images = sorted([*list_images(os.path.join(dataset_dir, subset, "images"))])
-        labels = sorted([*list_images(os.path.join(dataset_dir, subset, "labels"))])
+        labels = sorted(
+            [*list_files(os.path.join(dataset_dir, subset, "labels"), validExts="npy")]
+        )
 
         # split images and labels into train, test and val
 
@@ -523,7 +528,7 @@ class OpenEDS(Dataset):
         ):
             imname = os.path.basename(impath)
             # lb = np.load(lbpath)
-            lb = load_image(lbpath)
+            # lb = load_image(lbpath)
             # image = load_image(impath)
             # height, width = image.shape[:2]
             image = Image.open(impath)
@@ -560,7 +565,8 @@ class OpenEDS(Dataset):
             # [height, width, instance_count]
             # lb = np.load(image_info["lbpath"])
             try:
-                lb = load_image(image_info["lbpath"])
+                # lb = load_image(image_info["lbpath"])
+                lb = np.load(image_info["lbpath"])
 
                 # each object in self.class_info have his own color, so we can parse the label image
                 # sintax:
@@ -574,15 +580,15 @@ class OpenEDS(Dataset):
                     # color = obj["color"] # rgb
                     # create mask
                     if obj["name"] == "pupil":
-                        wh = np.where(lb[..., 1] == 255)
+                        wh = np.where(lb == 3)
                     elif obj["name"] == "iris":
-                        wh = np.where(lb[..., 1] == 103)
+                        wh = np.where(lb == 2)
                     elif obj["name"] == "sclera":
-                        wh = np.where(lb[..., 2] == 255)
+                        wh = np.where(lb == 1)
                     else:  # bg
-                        wh = np.where(lb[..., 1] == 0)
+                        wh = np.where(lb == 0)
 
-                    mask = np.zeros(lb.shape[:-1], dtype=np.uint8)
+                    mask = np.zeros(lb.shape, dtype=np.uint8)
                     mask[wh] = 1
                     # then resize
                     mask = cv2.resize(mask, self.dim[::-1])

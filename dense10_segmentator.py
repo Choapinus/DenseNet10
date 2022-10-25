@@ -74,7 +74,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         # make segmentator
         model = Model(
-            name="Dense10 Segmentator",
+            name="Dense10_Segmentator",
             inputs=model.input,
             outputs=[
                 model.output,
@@ -615,22 +615,24 @@ class DenseSegmentator(AbstractSegmentatorClass):
         # hardcoded because this have a different behaviour
         # mean squared error v3_DB
         elif self.rtype.lower() == "lms3":
-            pupil_xyr, iris_xyr = self.lms3(mask)
-            # fix daniel radiis
-            r_pupil[0], r_pupil[1] = pupil_xyr[1], pupil_xyr[0]
-            r_iris[0], r_iris[1] = iris_xyr[1], iris_xyr[0]
+            try:
+                pupil_xyr, iris_xyr = self.LMS3(mask)
+                # fix daniel radii
+                r_pupil[0], r_pupil[1] = pupil_xyr[1], pupil_xyr[0]
+                r_iris[0], r_iris[1] = iris_xyr[1], iris_xyr[0]
+                # assign radii to remaning slots in r_pupil and r_iris
+                # in lms3, DB said the function will return a circle, not an ellipse
+                r_pupil[2] = pupil_xyr[2]
+                r_pupil[3] = pupil_xyr[3]
 
-            # assign radii to remaning slots in r_pupil and r_iris
-            # in lms3, DB said the function will return a circle, not an ellipse
-            r_pupil[2] = pupil_xyr[2]
-            r_pupil[3] = pupil_xyr[3]
+                r_iris[2] = iris_xyr[2]
+                r_iris[3] = iris_xyr[3]
 
-            r_iris[2] = iris_xyr[2]
-            r_iris[3] = iris_xyr[3]
-
-            if verbose:
-                logger.warn(f"pupil info: {r_pupil}")
-                logger.warn(f"iris info: {r_iris}")
+                if verbose:
+                    logger.warn(f"pupil info: {r_pupil}")
+                    logger.warn(f"iris info: {r_iris}")
+            except ValueError as ve:
+                pass
 
         elem = {
             "pupil_x": int(r_pupil[0]),

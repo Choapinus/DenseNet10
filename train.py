@@ -1,11 +1,12 @@
-bs = 4
-dim = (320, 240)
+bs = 6
+dim = (240, 320)
 # dim = (224, 224)
 fix_cuda = True
 
 import os
 import cv2
 import json
+import warnings
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -15,7 +16,7 @@ from tensorflow.python import keras
 from metrics import mean_iou, mean_dice
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
-from utils.datagenerator import OpenEDS
+from utils.datagenerator import OpenEDS, EyeDataset
 from keras_fc_densenet import _create_fc_dense_net, build_FC_DenseNet10
 from tensorflow.keras.optimizers import RMSprop, SGD, Adam
 from imgaug import (
@@ -23,27 +24,32 @@ from imgaug import (
 )  # https://github.com/aleju/imgaug (pip3 install imgaug)
 from augmentations import avg_aug
 
-from keras.backend.tensorflow_backend import set_session
+from tensorflow.compat.v1.keras.backend import set_session
+from tensorflow.compat.v1 import Session
+from tensorflow.compat.v1 import ConfigProto
 
 if fix_cuda:
-    config = tf.ConfigProto()
+    config = ConfigProto()
     # dynamically grow GPU memory because unexpected error with gtx 1660 Ti max-Q
     config.gpu_options.allow_growth = True
-    set_session(tf.Session(config=config))
+    set_session(Session(config=config))
 
 
 # dataset contains pupil, iris, sclera and eye marks
-dataset_dir = "/home/choppy/TOC/datasets/openeds/ttv"
-class_map_dir = os.path.join(dataset_dir, "class_dict.csv")
+# dataset_dir = "/home/choppy/TOC/datasets/alcohol/alcohol_v7.0"
+dataset_dir = "/home/choppy/TOC/datasets/alcohol/alcohol_v4"
 
 print("[INFO] Loading dataset")
 
 # transform those marks into a tensor with a custom generator and avg_aug
-trainG = OpenEDS(batch_size=bs, augmentation=avg_aug(), dim=dim)
+# trainG = OpenEDS(batch_size=bs, augmentation=avg_aug(), dim=dim)
+# trainG = EyeDataset(batch_size=bs, augmentation=avg_aug(), dim=dim)
+trainG = EyeDataset(batch_size=bs, augmentation=None, dim=dim)
 trainG.load_eyes(dataset_dir, "train")
 trainG.prepare()
 
-valG = OpenEDS(batch_size=bs, dim=dim)
+# valG = OpenEDS(batch_size=bs, dim=dim)
+valG = EyeDataset(batch_size=bs, dim=dim)
 valG.load_eyes(dataset_dir, "val")
 valG.prepare()
 
@@ -88,10 +94,10 @@ model = build_FC_DenseNet10(
 # compile model with adam optimizer
 # experimental: with rmprop optimizer
 model.compile(
-    optimizer=Adam(lr=1e-4, decay=1e-7),
+    # optimizer=Adam(lr=1e-4, decay=1e-7),
+    optimizer=RMSprop(learning_rate=1e-4, decay=1e-6, momentum=0.9, centered=False),
+    # optimizer=SGD(learning_rate=1e-4, momentum=0.9),
     loss="categorical_crossentropy",
-    # experimental
-    # loss=[categorical_focal_loss(alpha=0.25, gamma=2), ],
     metrics=[
         mean_iou,
         mean_dice,
@@ -99,7 +105,7 @@ model.compile(
 )
 
 # save checkpoints of model
-mckpt = keras.callbacks.ModelCheckpoint(
+mckpt = tf.keras.callbacks.ModelCheckpoint(
     filepath="models/epoch_{epoch:03d}_miou_{val_mean_iou:.4f}.h5",
     monitor="val_mean_iou",
     verbose=1,
@@ -108,38 +114,47 @@ mckpt = keras.callbacks.ModelCheckpoint(
 )
 
 # save tensorboard models
-tsboard = keras.callbacks.TensorBoard(
+tsboard = tf.keras.callbacks.TensorBoard(
     write_images=True,
     write_graph=True,
 )
 
 # reduce lr on plateau and reduce with a factor of 0.5
-reduce_lr = keras.callbacks.ReduceLROnPlateau(
+reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
     monitor="val_mean_iou", factor=0.5, patience=10, verbose=1, mode="max", min_lr=1e-15
 )
 
 # early stopping
-early_stop = keras.callbacks.EarlyStopping(
+early_stop = tf.keras.callbacks.EarlyStopping(
     monitor="val_mean_iou",
     patience=30,
     mode="max",
     # restore_best_weights=True,
 )
 
-# fit generator into model and recover history
-hist = model.fit_generator(
-    trainG,
-    validation_data=valG,
-    epochs=300,
-    verbose=1,
-    steps_per_epoch=len(trainG),
-    validation_steps=len(valG),
-    callbacks=[reduce_lr, mckpt, tsboard, early_stop],
-    # callbacks=[reduce_lr, mckpt, tsboard, ],
-    workers=12,
-    max_queue_size=36,
-    use_multiprocessing=True,  # use wisely
-)
+
+def fxn():
+    warnings.warn("deprecated", DeprecationWarning)
+
+
+with warnings.catch_warnings():
+    # supress deprecated warnings of imgcorruptlike: "multichannel is a deprecated argument of gaussian"
+    warnings.simplefilter("ignore")
+    fxn()
+    # fit generator into model and recover history
+    hist = model.fit_generator(
+        trainG,
+        validation_data=valG,
+        epochs=300,
+        verbose=1,
+        steps_per_epoch=len(trainG),
+        validation_steps=len(valG),
+        callbacks=[reduce_lr, mckpt, tsboard, early_stop],
+        # callbacks=[reduce_lr, mckpt, tsboard, ],
+        workers=12,
+        max_queue_size=36,
+        use_multiprocessing=True,  # use wisely
+    )
 
 # define a plot function to plot history scores
 def plot_history(history, title, save_path, figsize=(10, 8), font_scale=2, linewidth=4):

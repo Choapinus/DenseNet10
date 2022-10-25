@@ -48,39 +48,38 @@ def avg_aug(mode="constant"):
                     iaa.AdditivePoissonNoise(lam=(0.01, 16.0)),
                 ],
             ),
-            iaa.SomeOf(
-                (0, 2),
-                [
-                    iaa.GaussianBlur(sigma=(0.01, 2.5)),
-                    iaa.AverageBlur(k=(1, 5)),
-                    iaa.MotionBlur(k=(3, 5)),
-                    iaa.GammaContrast(gamma=(0.01, 1.0)),
-                    iaa.imgcorruptlike.GaussianBlur(severity=(1, 3)),
-                    iaa.imgcorruptlike.GlassBlur(severity=(1, 3)),  # tambien se demora
-                    iaa.imgcorruptlike.DefocusBlur(severity=(1, 3)),
-                    iaa.imgcorruptlike.MotionBlur(severity=(1, 3)),  # se demora a cagar
-                    iaa.imgcorruptlike.ZoomBlur(severity=(1, 3)),  # se demora a cagar
-                ],
-            ),
-            iaa.SomeOf(
-                (0, 1),
-                [
-                    iaa.imgcorruptlike.Frost(severity=(1, 2)),
-                    iaa.imgcorruptlike.Spatter(severity=(1, 2)),
-                    iaa.Snowflakes(flake_size=(0.01, 0.2), speed=(0.01, 0.05)),
-                    iaa.Rain(speed=(0.01, 0.1)),
-                ],
-            ),
-            iaa.SomeOf(
-                (0, 2),
-                [
-                    iaa.PerspectiveTransform(scale=(0.01, 0.2), keep_size=True),
-                    iaa.PiecewiseAffine(scale=(0.01, 0.05)),  # se demora mucho
-                    iaa.ElasticTransformation(alpha=(0, 2.5), sigma=0.25),
-                ],
-            ),
-            iaa.Sometimes(0.5, iaa.JpegCompression(compression=(90, 98))),
-            # add random state to augmenter
+            # iaa.SomeOf(
+            #     (0, 2),
+            #     [
+            #         iaa.GaussianBlur(sigma=(0.01, 2.5)),
+            #         iaa.AverageBlur(k=(1, 5)),
+            #         iaa.MotionBlur(k=(3, 5)),
+            #         iaa.GammaContrast(gamma=(0.01, 1.0)),
+            #         iaa.imgcorruptlike.GaussianBlur(severity=(1, 3)),
+            #         iaa.imgcorruptlike.GlassBlur(severity=(1, 3)),  # tambien se demora
+            #         iaa.imgcorruptlike.DefocusBlur(severity=(1, 3)),
+            #         iaa.imgcorruptlike.MotionBlur(severity=(1, 3)),  # se demora a cagar
+            #         iaa.imgcorruptlike.ZoomBlur(severity=(1, 3)),  # se demora a cagar
+            #     ],
+            # ),
+            # iaa.SomeOf(
+            #     (0, 1),
+            #     [
+            #         iaa.imgcorruptlike.Frost(severity=(1, 2)),
+            #         iaa.imgcorruptlike.Spatter(severity=(1, 2)),
+            #         iaa.Snowflakes(flake_size=(0.01, 0.2), speed=(0.01, 0.05)),
+            #         iaa.Rain(speed=(0.01, 0.1)),
+            #     ],
+            # ),
+            # iaa.SomeOf(
+            #     (0, 2),
+            #     [
+            #         iaa.PerspectiveTransform(scale=(0.01, 0.2), keep_size=True),
+            #         iaa.PiecewiseAffine(scale=(0.01, 0.05)),  # se demora mucho
+            #         iaa.ElasticTransformation(alpha=(0, 2.5), sigma=0.25),
+            #     ],
+            # ),
+            # iaa.Sometimes(0.5, iaa.JpegCompression(compression=(90, 98))),
         ],
         random_state=True,
     )
