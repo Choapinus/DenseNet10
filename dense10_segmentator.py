@@ -4,24 +4,18 @@ import logging
 import numpy as np
 import configparser
 from tqdm import tqdm
-from os.path import abspath
 from scipy.io import loadmat
-from metrics import mean_iou, mean_dice
+from scipy.signal import convolve2d
+from os.path import abspath, basename
 from tensorflow.keras.models import load_model
 from tensorflow.python.keras.models import Model
 from scipy.ndimage.measurements import center_of_mass
-from tensorflow.python.keras.layers import (
-    GlobalAveragePooling2D,
-    GlobalMaxPool2D,
-    Flatten,
-)
-
 from abstract_segmentator import AbstractSegmentatorClass
 
 # TODO: add more documentation
 # TODO: update logger
 
-logger = logging.getLogger("dense10_20220629")
+logger = logging.getLogger("dense10_20221125")
 
 
 class DenseSegmentator(AbstractSegmentatorClass):
@@ -78,7 +72,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
         self.radii_estimators = self.set_radii_estimators()
 
         # additional data config
-        self.icamat = None  # TODO: parametrize this variable
+        # self.icamat = None  # TODO: parametrize this variable
 
         # logger config
         logger.debug("DenseSegmentator model loaded")
@@ -87,10 +81,6 @@ class DenseSegmentator(AbstractSegmentatorClass):
         model = load_model(
             self.modelpath,
             compile=False,
-            custom_objects={
-                "mean_iou": mean_iou,
-                "mean_dice": mean_dice,
-            },
         )
 
         # make segmentator
@@ -104,7 +94,13 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         # load iris encode type
         if self.iris_encode_type == "ica":
-            self.icamat = loadmat(abspath(self.icapath))["ICAtextureFilters"]
+            self.icapath = abspath(self.icapath)
+            filename = basename(self.icapath)
+            filter_info = filename.split("_")[1:]
+            self.filtersize = int(filter_info[0].split("x")[0])
+            self.numfilters = int(filter_info[1].split("bit")[0])  # from Nbit.mat
+            self.icamat = loadmat(self.icapath)["ICAtextureFilters"]
+            # print(self.icamat)
         else:
             logger.warning("No iris encode type selected")
             self.icamat = None
@@ -181,7 +177,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
         y = np.reshape(y.flatten(), (-1, 1))
         A = np.concatenate((x, y, np.ones(x.shape)), 1)
         B = -(x ** 2) - y ** 2
-        a, _, _, _ = np.linalg.lstsq(A, B)
+        a, _, _, _ = np.linalg.lstsq(A, B, rcond=None)
         xc = float(-0.5 * a[0])
         yc = float(-0.5 * a[1])
         R = float(np.sqrt(0.25 * (a[0] ** 2 + a[1] ** 2) - a[2]))
@@ -503,8 +499,19 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
     # iris modularization function for iris recognition
     def get_rubbersheet(self, image, pupil_xyr, iris_xyr):
+
+        if len(image.shape) < 3:  # 2d-image, create new-axis
+            image = image[..., np.newaxis]
+            rs_dim = 1
+        elif len(image.shape) == 3:  # "rgb" or 3d-image
+            rs_dim = 3
+        else:  # nd-image, could this work for another type of image?
+            rs_dim = image.shape[-1]
+
         # Angle value
-        rs = np.zeros((self.rubbersheet_height, self.rubbersheet_width, 3), np.uint8)
+        rs = np.zeros(
+            (self.rubbersheet_height, self.rubbersheet_width, rs_dim), np.uint8
+        )
 
         if self.iris_mod_type == "height":
             # decode centers and radii
@@ -542,9 +549,76 @@ class DenseSegmentator(AbstractSegmentatorClass):
                 Xc = (1 - self.radii) * x_lowers + self.radii * x_uppers
                 Yc = (1 - self.radii) * y_lowers + self.radii * y_uppers
 
-                rs[:, i, :] = image[Yc.astype(int), Xc.astype(int)]
+                rs[:, i, ...] = image[Yc.astype(int), Xc.astype(int)]
 
         return rs
+
+    # extract iris code
+    def extract_code_ICA(self, rs):
+
+        # catch exception for 3 dim image
+        # TODO: what to do with 3 dim image? by now, use only first channel
+        if len(rs.shape) >= 3:
+            rs = rs[..., 0]
+
+        # wrap image
+        r = int(np.floor(self.filtersize / 2))
+        imgWrap = np.zeros(
+            (r * 2 + self.rubbersheet_height, r * 2 + self.rubbersheet_width)
+        )
+
+        # wtf, need refs
+        imgWrap[:r, :r] = rs[-r:, -r:]
+        imgWrap[:r, r:-r] = rs[-r:, :]
+        imgWrap[:r, -r:] = rs[-r:, :r]
+
+        imgWrap[r:-r, :r] = rs[:, -r:]
+        imgWrap[r:-r, r:-r] = rs
+        imgWrap[r:-r, -r:] = rs[:, :r]
+
+        imgWrap[-r:, :r] = rs[:r, -r:]
+        imgWrap[-r:, r:-r] = rs[:r, :]
+        imgWrap[-r:, -r:] = rs[:r, :r]
+
+        # loop over all kernels in the filter set
+        codeBinary = np.zeros(
+            (self.rubbersheet_height, self.rubbersheet_width, self.numfilters)
+        )
+        for i in range(1, self.numfilters + 1):
+            ci = convolve2d(
+                imgWrap,
+                np.rot90(self.icamat[:, :, self.numfilters - i], 2),
+                mode="valid",
+            )
+            codeBinary[:, :, i - 1] = ci > 0
+
+        return codeBinary
+
+    # recognition as manhattan distance, implementation by DB
+    # available only with ICA filters
+    def matchCodes(self, code1, code2, mask1, mask2, maxshift=16):
+        margin = int(np.ceil(self.filtersize / 2))
+        margin_code1 = code1[margin:-margin, :, :]
+        margin_code2 = code2[margin:-margin, :, :]
+        margin_mask1 = mask1[margin:-margin, :]
+        margin_mask2 = mask2[margin:-margin, :]
+
+        scoreC = np.zeros((self.numfilters, 2 * maxshift + 1))
+        for shift in range(-maxshift, maxshift + 1):
+            andMasks = np.logical_and(
+                margin_mask1, np.roll(margin_mask2, shift, axis=1)
+            )
+            xorCodes = np.logical_xor(
+                margin_code1, np.roll(margin_code2, shift, axis=1)
+            )
+            xorCodesMasked = np.logical_and(
+                xorCodes, np.tile(np.expand_dims(andMasks, axis=2), self.numfilters)
+            )
+            scoreC[:, shift] = np.sum(xorCodesMasked, axis=(0, 1)) / np.sum(andMasks)
+
+        scoreC = np.min(np.mean(scoreC, axis=0))
+
+        return scoreC
 
     def predict(self, image, original_shape=(None, None)):
         """Infer the mask of the input image. The image to be
@@ -690,17 +764,11 @@ class DenseSegmentator(AbstractSegmentatorClass):
         # mean squared error v3_DB
         elif self.rtype.lower() == "lms3":
             try:
-                pupil_xyr, iris_xyr = self.LMS3(mask)
-                # fix daniel radii
-                r_pupil[0], r_pupil[1] = pupil_xyr[1], pupil_xyr[0]
-                r_iris[0], r_iris[1] = iris_xyr[1], iris_xyr[0]
-                # assign radii to remaning slots in r_pupil and r_iris
-                # in lms3, DB said the function will return a circle, not an ellipse
-                r_pupil[2] = pupil_xyr[2]
-                r_pupil[3] = pupil_xyr[3]
+                r_pupil, r_iris = self.LMS3(mask)
 
-                r_iris[2] = iris_xyr[2]
-                r_iris[3] = iris_xyr[3]
+                # fix daniel radii y->2->x
+                r_pupil[0], r_pupil[1] = r_pupil[1], r_pupil[0]
+                r_iris[0], r_iris[1] = r_iris[1], r_iris[0]
 
                 if verbose:
                     logger.warn(f"pupil info: {r_pupil}")
@@ -711,6 +779,12 @@ class DenseSegmentator(AbstractSegmentatorClass):
         # after getting radii of pupil and iris, we can
         # modularize iris to get iris code from it
         iris_rubsheet = self.get_rubbersheet(image, r_pupil, r_iris)
+
+        # get mask of rubbersheet
+        mask_iris_rubsheet = self.get_rubbersheet(iris_mask, r_pupil, r_iris)
+
+        # bitwise iris
+        bw_iris = self.bitwise_image(iris_rubsheet, mask_iris_rubsheet)
 
         elem = {
             "pupil_x": int(r_pupil[0]),
@@ -723,6 +797,8 @@ class DenseSegmentator(AbstractSegmentatorClass):
             "iris_r_max": int(r_iris[3]),
             "mask": mask,
             "iris_rubbersheet": iris_rubsheet,
+            "bitwised_iris_rubbersheet": bw_iris,
+            "mask_iris_rubbersheet": mask_iris_rubsheet,
             "pred_shape": list(self.target_size),
             "radii_type_estimator": self.rtype.lower(),
             "original_shape": list(original_shape),

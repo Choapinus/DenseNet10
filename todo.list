@@ -1,5 +1,9 @@
-* retrain / finetune densenet with tf2 environment
+# done * get iris code
+# done * iris recognition -> integrated but as a function "matchCodes", think about a refactor
 
+-------
+
+* retrain / finetune densenet with tf2 environment
 # hacer prueba chica y constatar avances para poder proseguir
 # revisar mascaras generadas por datagenerator
 # revisar y supervisar imagenes sin data augmentation (works well)
@@ -8,11 +12,9 @@
 
 -------
 
-* integrar iris recognition module # -> darle una vuelta para dejarlo modularizado
-
 # luego de integrarlo, hacer un paper sobre comparacion de reconocimiento de iris en quintiles de dilatacion
 # esto responde a la hipotesis: que tanto mejora el reconomiento con una mejor segmentacion y mejores metodos de localizacion de iris/pupila
 
 -------
 
-* update readme file
+* update readme file with iris code, iris recognition and some image examples

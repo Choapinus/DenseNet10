@@ -6,3 +6,6 @@ utils/__pycache__/
 notas_20220622.txt
 daniel
 daniel-20221006T125933Z-001.zip
+
+#ignore images
+*.bmp
