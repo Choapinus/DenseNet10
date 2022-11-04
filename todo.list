@@ -1,5 +1,20 @@
-# done * get iris code
-# done * iris recognition -> integrated but as a function "matchCodes", think about a refactor
+####### hacer presentacion con avances
+- especificar base de datos, procedimiento, que parametros de rubersheet, como dividiste los sujetos
+- librerias actualizadas, que paso con el entrenamiento en tf2
+- incluir evaluacion de segmentador y evaluacion de radio de iris para evaluar cuando es de calidad y cuando no el rubbersheet
+
+# pruebas y bases de datos a usar:
+- IoU/centro/radio de iris y pupila: alcohol v7.0 (solo test)
+- Reconocimiento de iris: Notredam (ND-LG4000-LR) -> destacar cuantos sujetos tiene en presentacion 
+
+
+* separar tf1 y tf2 de dense10 en dos ramas distintas
+* poner en privado rama tf2
+* ponerle nombres a los ejes
+* guardar imagen resultante como nombre-rubbersheet.png o en una carpeta rubbersheet
+* explicar que funcion de obtencion de code rubbersheet está afuera de funcion forward
+    - una vez terminada la ejecucion del algoritmo, describir que si se quiere obtener el iris code, ejecutar esta otra funcion
+
 
 -------
 

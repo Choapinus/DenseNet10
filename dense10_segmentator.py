@@ -499,6 +499,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
     # iris modularization function for iris recognition
     def get_rubbersheet(self, image, pupil_xyr, iris_xyr):
+        # TODO: anotar que por defecto la obtencion de iris es a lo ancho
 
         if len(image.shape) < 3:  # 2d-image, create new-axis
             image = image[..., np.newaxis]
@@ -667,6 +668,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
         return pred_mask
 
     def forward(self, image=None, verbose=False, *args, **kwargs):
+        # TODO: update docstring
         """Apply sequentially all model methods to get a final
         bitwised and cropped image.
 
