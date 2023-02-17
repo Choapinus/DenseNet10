@@ -666,7 +666,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
         pred_mask = pred_mask.astype(np.uint8)
 
         return pred_mask
-
+    
     def forward(self, image=None, verbose=False, *args, **kwargs):
         # TODO: update docstring
         """Apply sequentially all model methods to get a final
@@ -800,6 +800,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
             "mask": mask,
             "iris_rubbersheet": iris_rubsheet,
             "bitwised_iris_rubbersheet": bw_iris,
+            "iris_code": self.extract_code_ICA(bw_iris),
             "mask_iris_rubbersheet": mask_iris_rubsheet,
             "pred_shape": list(self.target_size),
             "radii_type_estimator": self.rtype.lower(),
@@ -807,7 +808,7 @@ class DenseSegmentator(AbstractSegmentatorClass):
         }
 
         return elem
-
+ 
     # eval functions
     # -------------------------------------------------------------------------
 

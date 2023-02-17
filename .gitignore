@@ -9,3 +9,6 @@ daniel-20221006T125933Z-001.zip
 
 #ignore images
 *.bmp
+
+# ignore aikit
+notebooks/aikit
