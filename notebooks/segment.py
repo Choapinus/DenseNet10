@@ -109,6 +109,7 @@ for imdir in tqdm(images, desc='processing images'):
             # guardar asi los radios [iriscenterX, iriscenterY, irisradius, pupilcenterX, pupilcenterY, pupilradius]
             radii_df = radii_df.append(
                 {
+                    'filedir': imdir,
                     'iris_x': iris_x, 'iris_y': iris_y, 'iris_r': iris_r, 
                     'pupil_x': pupil_x, 'pupil_y': pupil_y, 'pupil_r': pupil_r
                 }, ignore_index=True
