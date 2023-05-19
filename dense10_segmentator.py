@@ -780,7 +780,15 @@ class DenseSegmentator(AbstractSegmentatorClass):
 
         # after getting radii of pupil and iris, we can
         # modularize iris to get iris code from it
-        iris_rubsheet = self.get_rubbersheet(image, r_pupil, r_iris)
+        try:
+            iris_rubsheet = self.get_rubbersheet(image, r_pupil, r_iris)
+        except IndexError as ex:
+            # print readable info of image, r_pupil and r_iris
+            logger.warn(f"image: {image.shape}")
+            logger.warn(f"r_pupil: {r_pupil}")
+            logger.warn(f"r_iris: {r_iris}")
+            logger.warn(ex)
+            raise Exception("Error while getting rubbersheet")
 
         # get mask of rubbersheet
         mask_iris_rubsheet = self.get_rubbersheet(iris_mask, r_pupil, r_iris)

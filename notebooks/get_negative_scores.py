@@ -41,9 +41,9 @@ set_session(Session(config=config))
 inifile_path = '../config/segmentator_dense10.ini'
 modelpath = '../models/weights/dense_models/blurry_gemini_dense_miou_0.9275.h5'
 negative_pairs_file = '../ND-LG4000-LR/lists_comparisons/test_non_mated.txt'
-
+nd_lg4000_path = '/media/wd_black/datasets/NotreDame-LG4000-LR/iris'
+images = sorted(list(list_images(nd_lg4000_path)))
 model = DenseSegmentator(modelpath=modelpath, inifile_path=inifile_path)
-images = sorted(list(list_images('/media/wd_black/datasets/NotreDame-LG4000-LR/iris')))
 negative_pairs = []
 negative_scores = []
 
@@ -64,18 +64,30 @@ for imdir1, imdir2 in tqdm(negative_pairs, desc='processing negative pairs'):
     image1 = model.load_image(imdir1)
     image2 = model.load_image(imdir2)
 
-    # get iris code
-    info1 = model.forward(image1)
-    info2 = model.forward(image2)
+    try:
+        # get iris code
+        info1 = model.forward(image1)
+        info2 = model.forward(image2)
+    except Exception as ie:
+        # print readable info about error, image and its info stored in info1 and info2
+        print('Error processing images: {} and {}'.format(imdir1, imdir2))
+        print('Check processed information like iris and pupil radii')
+        continue
+
     code1 = info1.get('iris_code')
     code2 = info2.get('iris_code')
     mask1 = info1.get('mask_iris_rubbersheet')[..., 0]
     mask2 = info2.get('mask_iris_rubbersheet')[..., 0]
-    score = model.matchCodes(code1, code2, mask1, mask2)
+    try:
+        score = model.matchCodes(code1, code2, mask1, mask2)
+    except Exception as e:
+        print('Error matching codes: {} and {}'.format(imdir1, imdir2))
+        print('Check processed information like iris and pupil radii')
+        continue
     negative_scores.append(score)
 
 # %%
 # save negative scores to npy file
-np.save('negative_scores_indexed.npy', negative_scores)
+np.save(f'negative_scores_{model.rtype}.npy', negative_scores)
 
 

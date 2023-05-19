@@ -1,0 +1,26 @@
+Para ejecutar correctamente dense10 y obtener los resultados de comparaciones de iris, se deben tener las siguientes consideraciones:
+
+* input: por input solo se aceptan imagenes monoculares en espectro NIR
+* output: el modelo entrega un output compuesto por el rubbersheet, iriscode, 
+    xyr de iris y pupila, entre otros. En este caso, el iris rubbersheet y el iriscode
+    son los mas importante ya que los pasos posteriores se basan en ambos para generar la verificacion de identidad
+
+Primer paso:
+- en los archivos get_positive_scores.py & get_negative_scores.py 
+
+
+
+
+input imagenes monoculares NIR
+
+que codigo se ejecuta primero, cual despues, ejecutar eval-npz
+
+hacer paper sobre densenet -> leer referencia
+
+base de datos ND iris
+
+agregar como flag creacion de obtencion de rubbersheet e iriscode y guardarlos en una carpeta
+
+
+
+lo mismo para yolo
