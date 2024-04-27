@@ -90,7 +90,7 @@ python train.py
 
 ## Information
 - @Juan Tapia - juan.tapia-farias@h-da.de
-- @Andres Valenzuela - andres.valenzuela@tocbiometrics.com
+- @Andres Valenzuela - @usach.cl
 
 
 ## Disclaimer
