@@ -90,12 +90,12 @@ python train.py
 
 ## Information
 - @Juan Tapia - juan.tapia-farias@h-da.de
-- @Andres Valenzuela - andres.valenzuela@tocbiometrics.com
+- @Andres Valenzuela - andres.valenzuela.g@usach.cl
 
 
 ## Disclaimer
-The dataset, the implementation, or trained models used is restricted to research purposes. Using the dataset or the implementation/trained models for product development or comercial product is not allowed. This project is licensed under the terms of the Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license.
+The dataset, the implementation, or trained models used are restricted to research purposes. Using the dataset or the implementation/trained models for product development or comercial product is not allowed. This project is licensed under the terms of the Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license.
 
 ## TODO
-- Add iris template generation module using ICA filters
+- Add iris template generation module using ICA filters (?)
 - Add pytorch support
